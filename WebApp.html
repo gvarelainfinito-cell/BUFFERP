@@ -829,68 +829,6 @@ function navComp(subView) {
   if (subView === 'quotes') initQuoteScreen();
 }
 
-async function loadPurchaseHistory() {
-  const tbody = el('comp-history-body');
-  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Cargando historial...</td></tr>';
-
-  try {
-    const history = await run('obtenerHistorialCompras');
-
-    if (!history || history.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No hay solicitudes para mostrar.</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = ''; // Clear loading message
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    history.forEach(h => {
-      let atrasoHtml = '-';
-      // Harden the date calculation for "Días de Atraso"
-      if (h.fechaObraRaw && h.estado === 'PENDIENTE') {
-        const fechaObra = new Date(h.fechaObraRaw);
-        // Check if the date is valid before calculating.
-        if (!isNaN(fechaObra)) {
-          const diffTime = today - fechaObra;
-          const diffDays = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-          if (diffDays > 0) {
-            atrasoHtml = `<span style="color:var(--danger); font-weight:bold;">${diffDays} días</span>`;
-          } else {
-            atrasoHtml = '<span>OK</span>';
-          }
-        }
-      }
-
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><strong>${h.id}</strong></td>
-        <td>${h.fecha}</td>
-        <td>${h.fechaObra}</td>
-        <td>${h.solicitante}</td>
-        <td>${h.prioridad}</td>
-        <td>${atrasoHtml}</td>
-        <td><span class="stock-tag" style="background-color: #eee;">${h.estado}</span></td>
-        <td>
-          <button class="btn btn-secondary" onclick="verDetallePedido('${h.id}')">Ver</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-
-  } catch (e) {
-    showError(e);
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color: var(--danger);">Error al cargar el historial.</td></tr>';
-  }
-}
-
-// Placeholder to prevent errors when clicking "Cargar Cotizaciones"
-function initQuoteScreen(){
-  console.log("initQuoteScreen called. Functionality to be implemented.");
-  alert("La carga de cotizaciones no está implementada en esta versión.");
-}
-
 function setupDashboard() {
   el('dash-search').oninput = applyFilter;
   el('dash-filter-cat').onchange = applyFilter;
