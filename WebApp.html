@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/styles.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
+  <style>
+    /* === VARIABLES & ESTILOS BASE === */
+    :root {
+      --primary: #1a73e8; --primary-dark: #1558b0;
+      --danger: #d93025; --success: #1e8e3e; --warning: #f9ab00;
+      --bg-body: #f0f2f5; --bg-surface: #ffffff; --border: #dadce0;
+      --text-main: #202124; --text-sec: #5f6368;
+      --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Roboto', sans-serif; background: var(--bg-body); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; }
+    .hidden { display: none !important; }
+
+    /* === HEADER === */
+    header { background: var(--primary); color: white; padding: 0 20px; height: 60px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow); z-index: 100; }
+    .brand { display: flex; align-items: center; gap: 10px; font-size: 1.2rem; font-weight: 500; }
+    
+    /* Info Usuario */
+    .user-badge { font-size: 0.75rem; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 12px; margin-left: 15px; text-align: right; line-height: 1.2; }
+    .user-badge strong { display: block; font-weight: 700; }
+
+    nav { display: flex; gap: 5px; height: 100%; }
+    nav button {
+      background: transparent; border: none; color: rgba(255,255,255,0.7);
+      cursor: pointer; padding: 0 15px; height: 100%; font-weight: 500;
+      display: flex; align-items: center; gap: 8px; transition: 0.2s; font-size: 0.9rem;
+      border-bottom: 4px solid transparent;
+    }
+    nav button:hover { color: white; background: rgba(255,255,255,0.1); }
+    nav button.active { color: white; border-bottom-color: white; }
+
+    /* === LAYOUT === */
+    main { flex: 1; padding: 20px; overflow-y: auto; max-width: 1200px; margin: 0 auto; width: 100%; }
+    .grid-container { display: grid; grid-template-columns: 350px 1fr; gap: 24px; }
+
+    /* === ALERTAS === */
+    .alert-section { margin-bottom: 20px; animation: slideDown 0.3s ease-out; }
+    @keyframes slideDown { from {transform: translateY(-10px); opacity:0;} to {transform: translateY(0); opacity:1;} }
+    .alert-card { background: #fce8e6; border: 1px solid #fad2cf; border-radius: 8px; padding: 15px 20px; display: flex; flex-direction: column; gap: 10px; }
+    .alert-header { display: flex; align-items: center; gap: 10px; color: var(--danger); font-weight: 700; font-size: 1rem; }
+    .alert-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
+    .alert-item { background: white; padding: 10px; border-radius: 4px; border-left: 4px solid var(--danger); box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    .alert-item:hover { background: #fff5f5; }
+    .alert-val { font-weight: bold; color: var(--danger); font-size: 1.1rem; }
+
+    /* === KPIS === */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
+    .kpi-card { background: white; padding: 20px; border-radius: 8px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 15px; }
+    .kpi-icon { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; }
+    .kpi-icon .material-icons { font-size: 28px; }
+    .kpi-info h3 { margin: 0; font-size: 1.5rem; }
+    .kpi-info p { margin: 0; font-size: 0.85rem; color: var(--text-sec); font-weight: 500; text-transform: uppercase; }
+
+    /* === TABLAS & PANELES === */
+    .dashboard-panel { background: white; border-radius: 8px; box-shadow: var(--shadow); display: flex; flex-direction: column; height: 650px; }
+    .panel-header { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 15px; align-items: center; background: #fff; flex-wrap: wrap; }
+    
+    .search-box { flex: 2; position: relative; min-width: 250px; }
+    /* --- CORRECCIÓN DE SUPERPOSICIÓN DE ÍCONO --- */
+    .search-box input { 
+      width: 100%; 
+      /* Aumentamos el padding izquierdo a 50px para despegar el texto del ícono */
+      padding: 10px 10px 10px 50px !important; 
+      border: 1px solid var(--border); 
+      border-radius: 4px; 
+      height: 45px; 
+      font-size: 1rem;
+    }
+    .search-box .material-icons { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-sec); pointer-events: none; font-size: 24px; }
+    
+    .filter-select { flex: 1; padding: 0 10px; border: 1px solid var(--border); border-radius: 4px; background: white; min-width: 180px; height: 45px; font-size: 0.9rem; }
+
+    .table-wrapper { flex: 1; overflow: auto; position: relative; }
+    table { width: 100%; border-collapse: collapse; }
+    th { position: sticky; top: 0; background: #f8f9fa; color: var(--text-sec); font-size: 0.75rem; text-transform: uppercase; padding: 12px 20px; text-align: left; border-bottom: 1px solid var(--border); z-index: 1; }
+    td { padding: 12px 20px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+    tbody tr:hover { background: #f1f3f4; cursor: pointer; }
+    .stock-tag { padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; }
+    .stock-ok { background: #e6f4ea; color: var(--success); }
+    .stock-low { background: #fce8e6; color: var(--danger); }
+    .rot-badge { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; color: white; }
+    .rot-a { background: #1967d2; } .rot-b { background: #f9ab00; } .rot-c { background: #5f6368; }
+
+    /* Paginación */
+    .pagination-bar { padding: 10px 20px; border-top: 1px solid var(--border); background: #fff; display: flex; justify-content: space-between; align-items: center; }
+    .pagination-btn { background: white; border: 1px solid var(--border); padding: 5px 10px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.9rem; }
+    .pagination-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .pagination-btn:hover:not(:disabled) { background: #f1f3f4; }
+
+    /* === FORMULARIOS & CARDS === */
+    .card { background: var(--bg-surface); border-radius: 8px; box-shadow: var(--shadow); margin-bottom: 24px; overflow: hidden; }
+    .card-header { padding: 15px 20px; border-bottom: 1px solid var(--border); background-color: #fff; }
+    .card-header h4 { margin: 0; font-size: 1.1rem; font-weight: 500; }
+    .card-content { padding: 20px; }
+    .card-actions { padding: 15px 20px; background-color: #fafafa; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+
+    .form-group { margin-bottom: 15px; position: relative; }
+    .form-group label { display: block; margin-bottom: 5px; font-size: 0.8rem; font-weight: 700; color: var(--text-sec); text-transform: uppercase; }
+    input:not([type="checkbox"]), select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 1rem; }
+    input:focus, select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 2px rgba(26,115,232,0.2); }
+    input[readonly] { background: #f1f3f4; color: #555; }
+    
+    .btn { padding: 10px 20px; border: none; border-radius: 4px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; font-size: 0.9rem; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-secondary { background: white; border: 1px solid var(--border); color: var(--text-main); }
+    .btn-danger { background: var(--danger); color: white; }
+
+    .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid var(--border); border-radius: 0 0 4px 4px; max-height: 200px; overflow-y: auto; z-index: 50; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: none; }
+    .autocomplete-item { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #eee; }
+    .autocomplete-item:hover { background: #e8f0fe; }
+
+    /* === MODAL & LOADER === */
+    .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.5); z-index: 999; display: flex; align-items: center; justify-content: center; }
+    .modal { background: white; border-radius: 8px; width: 90%; max-width: 600px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); max-height: 85vh; display: flex; flex-direction: column; }
+    .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-body { padding: 20px; overflow-y: auto; }
+    .modal-stock-display { font-size: 3rem; font-weight: 300; color: var(--primary); text-align: center; margin: 10px 0; }
+
+    #loader { position: fixed; top:0; left:0; width:100%; height:100%; background: white; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px;}
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <div id="loader"><div class="spinner"></div><div id="loader-msg">Verificando permisos...</div></div>
+
+  <header>
+    <div class="brand"><span class="material-icons">inventory_2</span> Control de Stock</div>
+    
+    <nav id="nav-menu" class="hidden">
+      <button onclick="nav('dashboard')" class="active" id="btn-nav-dashboard"><span class="material-icons">dashboard</span> Dashboard</button>
+      <button onclick="nav('salidas')" id="btn-nav-salidas" class="hidden"><span class="material-icons">output</span> Salidas</button>
+      <button onclick="nav('entradas')" id="btn-nav-entradas" class="hidden"><span class="material-icons">add_shopping_cart</span> Entradas</button>
+      <button onclick="nav('gestion')" id="btn-nav-gestion" class="hidden"><span class="material-icons">settings</span> Gestión</button>
+      <button onclick="nav('compras')" id="btn-nav-compras" class="admin-only"><span class="material-icons">shopping_bag</span> Compras</button>
+    </nav>
+
+    <div id="user-info" class="user-badge hidden">
+      <strong id="ui-name">Usuario</strong>
+      <span id="ui-role">ROL</span>
+    </div>
+  </header>
+
+  <main>
+    <div id="view-dashboard">
+      <div id="alert-section" class="alert-section hidden">
+        <div class="alert-card">
+          <div class="alert-header"><span class="material-icons">notifications_active</span> ALERTAS DE STOCK CRÍTICO</div>
+          <div id="alert-list" class="alert-list"></div>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background: #1a73e8;"><span class="material-icons">inventory_2</span></div>
+          <div class="kpi-info"><h3 id="kpi-total">0</h3><p>Items Totales</p></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background: #d93025;"><span class="material-icons">warning</span></div>
+          <div class="kpi-info"><h3 id="kpi-low">0</h3><p>Stock Crítico</p></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background: #1e8e3e;"><span class="material-icons">category</span></div>
+          <div class="kpi-info"><h3 id="kpi-cats">0</h3><p>Categorías</p></div>
+        </div>
+      </div>
+
+      <div class="dashboard-panel">
+        <div class="panel-header">
+          <div class="search-box">
+            <span class="material-icons">search</span>
+            <input type="text" id="dash-search" placeholder="Buscar por nombre, código, unidad...">
+          </div>
+          <select id="dash-filter-cat" class="filter-select"><option value="all">Todas las Categorías</option></select>
+          <select id="dash-filter-stock" class="filter-select">
+            <option value="all">Todo el Stock</option>
+            <option value="low">Bajo Stock</option>
+            <option value="positive">Stock OK</option>
+          </select>
+          <select id="dash-filter-rot" class="filter-select">
+            <option value="all">Todas las Rotaciones</option>
+            <option value="A">Tipo A (Alta)</option>
+            <option value="B">Tipo B (Media)</option>
+            <option value="C">Tipo C (Baja)</option>
+          </select>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+               <th style="width:5%">Rot.</th>
+               <th style="width:15%">Código</th>
+               <th style="width:35%">Descripción</th>
+               <th style="width:10%">Unidad</th>
+               <th style="width:10%; text-align:right; color:var(--text-sec);">Mínimo</th>
+               <th style="width:10%; text-align:right;">Stock</th>
+               <th style="width:15%">Estado</th>
+             </tr>
+            </thead>
+            <tbody id="dash-table-body"></tbody>
+          </table>
+        </div>
+        <div class="pagination-bar">
+          <span id="page-info">0-0 de 0</span>
+          <div style="display:flex; gap:10px;">
+            <button id="btn-prev" class="pagination-btn" disabled><span class="material-icons" style="font-size:16px;">chevron_left</span> Ant.</button>
+            <button id="btn-next" class="pagination-btn" disabled>Sig. <span class="material-icons" style="font-size:16px;">chevron_right</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-compras" class="hidden">
+      
+      <div id="comp-menu" class="grid-container" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+        
+        <div class="card" style="text-align:center; cursor:pointer; transition:transform 0.2s;" onclick="navComp('new')">
+          <div class="card-content">
+            <span class="material-icons" style="font-size:48px; color:var(--primary);">post_add</span>
+            <h3>Nueva Solicitud</h3>
+            <p style="color:var(--text-sec);">Generar un nuevo pedido de materiales.</p>
+          </div>
+        </div>
+
+        <div class="card" style="text-align:center; cursor:pointer; transition:transform 0.2s;" onclick="navComp('list')">
+          <div class="card-content">
+            <span class="material-icons" style="font-size:48px; color:#f9ab00;">history_edu</span>
+            <h3>Ver Solicitudes</h3>
+            <p style="color:var(--text-sec);">Consultar estado e historial de pedidos.</p>
+          </div>
+        </div>
+
+        <div class="card" style="text-align:center; cursor:pointer; transition:transform 0.2s;" onclick="navComp('quotes')">
+          <div class="card-content">
+            <span class="material-icons" style="font-size:48px; color:var(--success);">attach_money</span>
+            <h3>Cargar Cotizaciones</h3>
+            <p style="color:var(--text-sec);">Cargar precios de proveedores a un pedido.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="comp-view-new" class="hidden">
+        <button class="btn btn-secondary mb-2" onclick="navComp('menu')" style="margin-bottom:15px;">
+          <span class="material-icons">arrow_back</span> Volver al Menú
+        </button>
+        
+        <div class="grid-container">
+          <div class="card">
+            <div class="card-header"><h4 style="color:var(--primary);">📝 Datos del Pedido</h4></div>
+            <div class="card-content">
+              <div class="form-group">
+                  <label>Prioridad</label>
+                  <select id="comp-prio"><option value="Normal">Normal</option><option value="Alta">Alta</option><option value="Urgente">Urgente</option></select>
+              </div>
+              <div class="form-group"><label>Obra / Destino</label><input type="text" id="comp-dest" placeholder="Ej: Obra Centro"></div>
+              <div class="form-group"><label>Fecha Necesidad</label><input type="date" id="comp-fecha"></div>
+              <div class="form-group"><label>Gestor</label><input type="text" id="comp-gestor" style="background:#e8f0fe; font-weight:500;" readonly></div>
+              <div class="form-group">
+                <label>Solicitante</label>
+                <input type="text" id="comp-solic" list="list-solicitantes" placeholder="Seleccione...">
+                <datalist id="list-solicitantes"></datalist>
+              </div>
+              <div class="form-group"><label>Observaciones</label><input type="text" id="comp-obs"></div>
+            </div>
+          </div>
+  
+          <div class="card">
+            <div class="card-header"><h4>Materiales</h4></div>
+            <div class="card-content">
+              <div class="form-group" style="display:flex; gap:10px; align-items:flex-end;">
+                <div style="flex:1; position:relative;">
+                  <label>Buscar</label>
+                  <input type="text" id="comp-search" placeholder="Escriba...">
+                  <input type="hidden" id="comp-code">
+                  <div id="comp-results" class="autocomplete-list"></div>
+                </div>
+                <div style="width:80px;"><label>Cant</label><input type="number" id="comp-qty"></div>
+                <button class="btn btn-secondary" onclick="addQueue('comp')"><span class="material-icons">add</span></button>
+              </div>
+              <div class="table-wrapper" style="max-height:300px; border:1px solid var(--border);">
+                <table><thead><tr><th>Item</th><th>Cant</th><th></th></tr></thead><tbody id="comp-table"></tbody></table>
+              </div>
+              <div id="comp-empty" class="text-center" style="padding:15px; color:var(--text-sec);">Lista vacía</div>
+            </div>
+            <div class="card-actions">
+              <button class="btn btn-primary" onclick="savePurchaseRequest()"><span class="material-icons">send</span> Generar Solicitud</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="comp-view-list" class="hidden">
+        <button class="btn btn-secondary" onclick="navComp('menu')" style="margin-bottom:15px;"><span class="material-icons">arrow_back</span> Volver</button>
+        <div class="card">
+          <div class="card-header"><h4>📋 Historial de Solicitudes</h4></div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Creado</th>
+                  <th>Necesidad Obra</th>
+                  <th>Solicitante</th>
+                  <th>Prioridad</th>
+                  <th>Atraso</th>
+                  <th>Estado</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="comp-history-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="comp-view-quotes" class="hidden">
+        <button class="btn btn-secondary" onclick="navComp('menu')" style="margin-bottom:15px;">
+          <span class="material-icons">arrow_back</span> Volver
+        </button>
+
+        <div class="grid-container">
+          <div class="card">
+            <div class="card-header"><h4>1. Seleccionar Pedido</h4></div>
+            <div class="table-wrapper" style="max-height:400px;">
+              <table>
+                <thead><tr><th>ID</th><th>Solicitante</th><th></th></tr></thead>
+                <tbody id="quote-list-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card" id="quote-form-card" style="opacity:0.5; pointer-events:none;">
+            <div class="card-header"><h4 id="quote-form-title">2. Cargar Precios</h4></div>
+            <div class="card-content">
+              
+              <div class="form-group">
+                <label>Proveedor</label>
+                <div style="display:flex; gap:5px;">
+                   <select id="quote-provider"><option value="">Cargando...</option></select>
+                   <button class="btn btn-secondary" style="padding:0 10px;" onclick="alert('Agregue el proveedor en la hoja Maestro_Proveedores')">+</button>
+                </div>
+              </div>
+
+              <div class="table-wrapper" style="max-height:300px; border:1px solid var(--border); margin-bottom:15px;">
+                <table>
+                  <thead><tr><th>Material</th><th>Cant.</th><th>Precio Unit ($)</th></tr></thead>
+                  <tbody id="quote-items-body">
+                    <tr><td colspan="3" class="text-center">Seleccione un pedido primero</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="card-actions">
+                <button class="btn btn-success" style="background:var(--success); color:white; width:100%;" onclick="saveQuote()">
+                  <span class="material-icons">save</span> Guardar Cotización
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div id="view-salidas" class="hidden">
+      <div class="grid-container">
+        <div class="card">
+          <div class="card-header"><h4 style="color:var(--danger);">📤 Registrar Salida</h4></div>
+          <div class="card-content">
+            <div class="form-group">
+              <label>1. Responsable (QR)</label>
+              <input type="text" id="out-resp" placeholder="Escanear..." style="background:#fff8e1; font-weight:bold;">
+              <div id="out-resp-list" class="autocomplete-list"></div>
+            </div>
+            <div class="form-group"><label>Contratista</label><input type="text" id="out-contr" readonly></div>
+            <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
+            <div class="form-group">
+              <label>2. Material</label>
+              <input type="text" id="out-search" placeholder="Buscar...">
+              <input type="hidden" id="out-code">
+              <div id="out-search-list" class="autocomplete-list"></div>
+              <small id="out-stock-info" style="color:var(--primary); font-weight:bold;"></small>
+            </div>
+            <div class="form-group"><label>3. Cantidad</label><input type="number" id="out-qty"></div>
+            <div class="form-group"><label>Comentario</label><input type="text" id="out-comm"></div>
+            <button class="btn btn-secondary" style="width:100%" onclick="addQueue('out')">Agregar a Lista</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h4>Lista de Salida</h4></div>
+          <div class="card-content" style="padding:0;">
+            <div class="table-wrapper" style="border:none; max-height:400px;">
+              <table><thead><tr><th>Item</th><th>Cant</th><th>Resp</th><th></th></tr></thead><tbody id="out-table"></tbody></table>
+            </div>
+            <div id="out-empty" class="text-center" style="padding:20px; color:var(--text-sec);">Lista vacía</div>
+          </div>
+          <div class="card-actions"><button class="btn btn-danger" onclick="saveTx('out')">Confirmar Salida</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-entradas" class="hidden">
+      <div class="grid-container">
+        <div class="card">
+          <div class="card-header"><h4 style="color:var(--success);">📥 Registrar Entrada</h4></div>
+          <div class="card-content">
+            <div class="form-group">
+              <label>Material</label>
+              <input type="text" id="in-search" placeholder="Buscar..." autocomplete="off">
+              <input type="hidden" id="in-code">
+              <div id="in-search-list" class="autocomplete-list"></div>
+            </div>
+            <div class="form-group">
+              <label>Cantidad <span id="in-unit-display" style="color:var(--primary); font-weight:bold;"></span></label>
+              <input type="number" id="in-qty">
+            </div>
+            <div class="form-group"><label>Proveedor</label><input type="text" id="in-prov"></div>
+            <div class="form-group"><label>Remito</label><input type="text" id="in-rem"></div>
+            <div class="form-group"><label>Importe</label><input type="number" id="in-imp"></div>
+            <button class="btn btn-secondary" style="width:100%" onclick="addQueue('in')">Agregar a Lista</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h4>Lista de Entrada</h4></div>
+          <div class="card-content" style="padding:0;">
+            <div class="table-wrapper" style="border:none; max-height:400px;">
+              <table>
+                <thead><tr><th>Item</th><th>Unidad</th><th>Cant</th><th>Prov</th><th></th></tr></thead>
+                <tbody id="in-table"></tbody>
+              </table>
+            </div>
+            <div id="in-empty" class="text-center" style="padding:20px; color:var(--text-sec);">Lista vacía</div>
+          </div>
+          <div class="card-actions"><button class="btn btn-primary" onclick="saveTx('in')">Confirmar Entrada</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-gestion" class="hidden">
+      <div class="grid-container">
+        
+        <div class="card admin-content">
+          <div class="card-header"><h4>🆕 Crear Material</h4></div>
+          <div class="card-content">
+            <div class="form-group"><label>Descripción</label><input type="text" id="new-desc"></div>
+            <div class="form-group"><label>Unidad</label><input type="text" id="new-unit" list="dl-units"></div>
+            <datalist id="dl-units"></datalist>
+            <div class="form-group"><label>Categoría</label><input type="text" id="new-cat"></div>
+            <div class="form-group"><label>Stock Inicial</label><input type="number" id="new-stock" value="0"></div>
+            <div class="form-group"><label>Motivo</label><input type="text" id="new-motivo" value="Carga inicial"></div>
+            <button class="btn btn-primary" style="width:100%" onclick="saveNew()">Guardar Material</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h4>🛠️ Ajuste Stock</h4></div>
+          <div class="card-content">
+            <div class="form-group">
+              <label>Buscar Material</label>
+              <input type="text" id="adj-search">
+              <div id="adj-search-list" class="autocomplete-list"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+              <span>Actual: <strong id="adj-curr">--</strong></span>
+            </div>
+            <div class="form-group"><label>Nuevo Stock Real</label><input type="number" id="adj-val"></div>
+            <div class="form-group"><label>Motivo</label><input type="text" id="adj-reas"></div>
+            <button class="btn btn-primary" style="width:100%" onclick="saveAdj()">Corregir</button>
+            
+            <div class="admin-content" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px;">
+                <button class="btn btn-danger" style="width:100%" onclick="resetNegs()">Poner Negativos en Cero</button>
+                <br>
+                <button class="btn btn-secondary" style="width:100%; margin-top:10px; border-color:var(--primary); color:var(--primary);" onclick="recalcMinimos()">
+                  <span class="material-icons">auto_graph</span> Recalcular Stock Mínimo
+                </button>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="card admin-content" style="border-left: 5px solid #f9ab00;">
+          <div class="card-header"><h4>🔄 Importación Legacy</h4></div>
+          <div class="card-content">
+            <p style="font-size:0.9rem; color:var(--text-sec);">Importar nuevos movimientos desde la planilla externa.</p>
+            <button class="btn btn-secondary" style="width:100%; border-color:#f9ab00; color:#e65100;" onclick="runLegacyImport()">
+              <span class="material-icons">cloud_download</span> Ejecutar Importación
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+ <div id="modal-detail" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title" style="margin:0">Detalle</h3>
+        <button onclick="closeModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <div id="modal-highlight" style="text-align:center; margin-bottom:15px;"></div>
+        
+        <div id="modal-stock" style="display:none;"></div> 
+        
+        <hr style="margin: 10px 0; border:0; border-top:1px solid #eee;">
+        
+        <div id="modal-meta" style="margin-bottom:15px; font-size: 0.9rem; line-height: 1.6;">
+            <p><strong>Categoría:</strong> <span id="modal-cat"></span></p>
+            <p><strong>Unidad:</strong> <span id="modal-unit"></span></p>
+        </div>
+        
+        <h4 id="modal-subtitle">Historial</h4>
+        <div id="modal-loader" class="text-center hidden" style="color:#666;">Cargando datos...</div>
+        
+        <div class="table-wrapper" style="max-height:200px; border:1px solid #eee; border-radius:4px;">
+            <table style="width:100%; margin:0;">
+               <thead id="modal-thead" style="background:#f9f9f9;"></thead>
+               <tbody id="modal-tbody"></tbody>
+            </table>
+        </div>
+
+        <div id="modal-quotes-section" class="hidden" style="margin-top: 20px; border-top: 2px dashed #eee; padding-top: 15px;">
+            <h4 style="margin-bottom:10px; color:var(--primary); display:flex; align-items:center; gap:5px;">
+                <span class="material-icons" style="font-size:1.2rem;">paid</span> Comparativa de Precios
+            </h4>
+            <div style="overflow-x: auto; border:1px solid #ddd; border-radius:4px;">
+                <table style="width:100%; min-width: 400px;">
+                    <thead id="quotes-thead" style="background:#f0f7ff; color:#333;"></thead>
+                    <tbody id="quotes-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+<div id="modal-comparativa" class="modal-overlay hidden">
+    <div class="modal" style="max-width: 90%; width: 1100px; height: 90vh;">
+      <div class="modal-header">
+        <h3 style="margin:0" id="comp-modal-title">Comparativa de Precios</h3>
+        <button onclick="closeCompModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; background:var(--bg-body);">
+        
+        <div id="comp-loader" class="text-center hidden" style="padding:40px;">
+          <div class="spinner"></div><p>Cargando datos del pedido...</p>
+        </div>
+        
+        <div id="comp-content" class="hidden" style="display:flex; flex:1; overflow:hidden; gap:20px;">
+          
+          <div class="card" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+            <div class="card-header">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <select id="comp-select-proveedor" style="width:250px; padding:5px; height:auto;"></select>
+                <button class="btn btn-secondary" onclick="agregarColumnaProveedor()">
+                  <span class="material-icons" style="font-size:16px;">add</span> Agregar Proveedor
+                </button>
+              </div>
+            </div>
+            <div class="card-content" style="flex:1; overflow:auto; padding:0;">
+              <div class="table-wrapper" style="border:none; max-height:none;">
+                <table id="comp-table-carga">
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      </tr>
+                  </thead>
+                  <tbody id="comp-table-body-carga">
+                    </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card-actions">
+              <button class="btn btn-primary" onclick="ejecutarCalculoComparativa()">
+                <span class="material-icons">calculate</span> Calcular Comparativa
+              </button>
+            </div>
+          </div>
+          
+          <div class="card" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+            <div class="card-header"><h4>Resultados</h4></div>
+            <div class="card-content" style="flex:1; overflow:auto;">
+              <h4>Ranking de Proveedores (Mejor Score)</h4>
+              <div class="table-wrapper" style="max-height:200px;">
+                <table id="comp-ranking-table">
+                  <thead><tr><th>Rank</th><th>Proveedor</th><th>Score</th><th>Total</th><th>Cond.</th><th>Plazo</th></tr></thead>
+                  <tbody id="comp-ranking-body"></tbody>
+                </table>
+              </div>
+              
+              <h4 style="margin-top:20px;">Combinación Óptima (Mejor Precio/Canje)</h4>
+              <div class="table-wrapper" style="max-height:200px;">
+                <table id="comp-optima-table">
+                  <thead><tr><th>Item</th><th>Proveedor</th><th>Precio</th><th>Total</th></tr></thead>
+                  <tbody id="comp-optima-body"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card-actions">
+              <button class="btn btn-primary" onclick="alert('Próximamente: Generar OC')">
+                <span class="material-icons">send</span> Generar OC
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ==========================================
+   1. CONFIGURACIÓN Y VARIABLES GLOBALES
+   ========================================== */
+const CRITICAL_ITEMS = ["MAT-009","MAT-012","MAT-029","MAT-040","MAT-048","MAT-097","MAT-098","MAT-119","MAT-123","MAT-147","MAT-184","MAT-316","MAT-376","MAT-377","MAT-395","MAT-396","MAT-178"];
+
+let DB=[], FILTERED=[], PAGE=1, LIMIT=100;
+let UNITS=[], FIRMANTES=[], QUEUE={in:[], out:[], comp:[]};
+let CURRENT_USER = { rol: 'INVITADO', nombre: 'Visitante' };
+let contratistasData = {}; 
+let RETURN_TO_SALIDAS = false; 
+let currentQuoteID = null;
+let G_PEDIDO_ACTUAL = null;
+let G_PROVEEDORES = [];
+let G_CONDICIONES = [];
+let G_PROVS_COTIZANDO = [];
+
+/* ==========================================
+   2. UTILIDADES DE SERVIDOR & UI
+   ========================================== */
+const run = (fn, ...a) => new Promise((ok, fail) => {
+  google.script.run.withSuccessHandler(ok).withFailureHandler(fail)[fn](...a);
+});
+
+const el = id => document.getElementById(id);
+
+const showLoader = (v, msg) => { 
+  const loader = el('loader');
+  if (loader) {
+    loader.style.display = v ? 'flex' : 'none'; 
+    if(msg) el('loader-msg').innerText = msg; 
+  }
+};
+
+const showError = (e) => {
+  console.error(e);
+  alert('Ocurrió un error: ' + (e.message || e));
+  showLoader(false);
+};
+
+// Función para crear IDs HTML seguros (ej: MAT-001.A -> MAT-001-A)
+const cleanId = (id) => String(id).replace(/[^a-zA-Z0-9]/g, '-');
+
+/* ==========================================
+   3. INICIO
+   ========================================== */
+window.onload = async () => {
+  try {
+    // A. Permisos
+    try {
+      const user = await run('obtenerPermisosUsuario');
+      if (user) CURRENT_USER = user;
+    } catch (e) { console.warn("Login falló", e); }
+
+    if(el('ui-name')) el('ui-name').innerText = CURRENT_USER.nombre;
+    if(el('ui-role')) el('ui-role').innerText = CURRENT_USER.rol;
+    el('user-info').classList.remove('hidden');
+    applyPermissions(CURRENT_USER.rol);
+
+    // B. Cargar Datos
+    showLoader(true, "Cargando sistema...");
+    await refreshData();
+
+    // C. Setup UI
+    setupDashboard();
+    setupAutocomplete('out-resp', 'out-resp-list', FIRMANTES, selectResp, 'firmante');
+    setupAutocomplete('out-search', 'out-search-list', DB, selectOutMat, 'desc');
+    setupAutocomplete('in-search', 'in-search-list', DB, selectInMat, 'desc');
+    setupAutocomplete('adj-search', 'adj-search-list', DB, selectAdjMat, 'desc');
+    setupAutocomplete('comp-search', 'comp-results', DB, selectCompMat, 'desc');
+
+    if(el('comp-gestor')) el('comp-gestor').value = CURRENT_USER.nombre;
+
+    showLoader(false);
+    el('nav-menu').classList.remove('hidden');
+    
+  } catch(e) { 
+    showError(e);
+  }
+};
+
+/* ==========================================
+   4. REFRESCAR DATOS
+   ========================================== */
+async function refreshData() {
+  const [data, units, firmsMap] = await Promise.all([
+    run('obtenerDatosCompletosDashboard'),
+    run('obtenerUnidadesConfig'),
+    run('obtenerConfiguracionContratistas')
+  ]);
+  
+  DB = calculateABC(data || []);
+  UNITS = units || [];
+  contratistasData = firmsMap || {};
+  
+  FIRMANTES = [];
+  Object.keys(contratistasData).forEach(c => {
+    if(Array.isArray(contratistasData[c])) {
+      contratistasData[c].forEach(f => FIRMANTES.push({firmante:f, contratista:c}));
+    }
+  });
+  
+  const dl = el('dl-units');
+  if(dl) {
+    dl.innerHTML = '';
+    UNITS.forEach(u => { const o=document.createElement('option'); o.value=u; dl.appendChild(o); });
+  }
+
+  const dlSolic = el('list-solicitantes');
+  if (dlSolic) {
+    dlSolic.innerHTML = '';
+    const keyArq = Object.keys(contratistasData).find(k => k.toLowerCase() === 'arquitectura');
+    if (keyArq && Array.isArray(contratistasData[keyArq])) {
+      contratistasData[keyArq].forEach(persona => {
+        const o = document.createElement('option'); o.value = persona; dlSolic.appendChild(o);
+      });
+    }
+  }
+
+  applyFilter();
+  checkAlerts();
+}
+
+/* ==========================================
+   5. FUNCIONES DE NEGOCIO
+   ========================================== */
+function applyPermissions(rol) {
+  const bSal = el('btn-nav-salidas'), bEnt = el('btn-nav-entradas'), bGes = el('btn-nav-gestion'), bComp = el('btn-nav-compras');
+  if(!bSal) return;
+  
+  [bSal, bEnt, bGes, bComp].forEach(b => b.classList.add('hidden'));
+  document.querySelectorAll('.admin-only').forEach(e=>e.classList.add('hidden'));
+  
+  if (rol === 'ADMIN') {
+    [bSal, bEnt, bGes, bComp].forEach(b => b.classList.remove('hidden'));
+    document.querySelectorAll('.admin-only').forEach(e=>e.classList.remove('hidden'));
+  } else if (rol === 'OPERADOR') {
+    bSal.classList.remove('hidden'); 
+    bEnt.classList.remove('hidden');
+    bComp.classList.remove('hidden');
+  }
+}
+
+function calculateABC(data) {
+  if(!data) return [];
+  const sorted = [...data].sort((a, b) => b.movs - a.movs);
+  const total = sorted.length;
+  const countA = Math.floor(total * 0.20);
+  const countB = Math.floor(total * 0.30);
+  return data.map(item => {
+    const idx = sorted.indexOf(item);
+    let rot = 'C';
+    if (item.movs > 0) { if (idx < countA) rot = 'A'; else if (idx < countA + countB) rot = 'B'; }
+    return { ...item, rotacion: rot };
+  });
+}
+
+function checkAlerts() {
+  const sec = el('alert-section'), list = el('alert-list');
+  if(!sec || !list) return;
+  list.innerHTML = '';
+  let has = false;
+  DB.forEach(item => {
+    if (CRITICAL_ITEMS.includes(item.codigo)) {
+      const umbral = item.min > 0 ? item.min : 0;
+      if (item.stock <= umbral) {
+        has = true;
+        const div = document.createElement('div');
+        div.className = 'alert-item';
+        div.innerHTML = `<div><strong>${item.desc}</strong><small>${item.codigo}</small></div><div class="alert-val">${item.stock} <span style="font-size:0.7rem;color:#666;">(Min: ${umbral})</span></div>`;
+        div.onclick = () => openModalMaterial(item); // LLama al modal de material
+        list.appendChild(div);
+      }
+    }
+  });
+  has ? sec.classList.remove('hidden') : sec.classList.add('hidden');
+}
+
+function cumpleCriterioBusqueda(item, textoBusqueda) {
+  if (!textoBusqueda) return true;
+  const palabras = textoBusqueda.toLowerCase().trim().split(/\s+/);
+  const datosItem = ((item.codigo||'')+' '+(item.desc||'')+' '+(item.unidad||'')+' '+(item.categoria||'')).toLowerCase();
+  return palabras.every(palabra => datosItem.includes(palabra));
+}
+
+/* ==========================================
+   6. NAVEGACIÓN & DASHBOARD
+   ========================================== */
+function nav(view) {
+  document.querySelectorAll('main > div').forEach(d => d.classList.add('hidden'));
+  const target = el('view-'+view);
+  if(target) target.classList.remove('hidden');
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  const btn = el('btn-nav-'+view);
+  if(btn) btn.classList.add('active');
+}
+
+function navComp(subView) {
+  ['menu', 'new', 'list', 'quotes'].forEach(v => {
+    const el = document.getElementById('comp-view-' + v);
+    if (el) el.classList.add('hidden');
+  });
+  const target = document.getElementById('comp-view-' + subView);
+  if (target) target.classList.remove('hidden');
+  if (subView === 'list') loadPurchaseHistory();
+  if (subView === 'quotes') initQuoteScreen();
+}
+
+function setupDashboard() {
+  el('dash-search').oninput = applyFilter;
+  el('dash-filter-cat').onchange = applyFilter;
+  el('dash-filter-stock').onchange = applyFilter;
+  el('dash-filter-rot').onchange = applyFilter;
+  el('btn-prev').onclick = () => changePage(-1);
+  el('btn-next').onclick = () => changePage(1);
+  
+  const catSel = el('dash-filter-cat');
+  if(catSel && catSel.options.length <= 1) {
+    const cats = [...new Set(DB.map(i=>i.categoria).filter(c=>c))].sort();
+    cats.forEach(c => { const o=document.createElement('option'); o.value=c; o.text=c; catSel.appendChild(o); });
+    el('kpi-cats').innerText = cats.length;
+  }
+}
+
+function applyFilter() {
+  el('kpi-total').innerText = DB.length;
+  el('kpi-low').innerText = DB.filter(i=>i.stock<=0).length;
+
+  const term = el('dash-search').value;
+  const cat = el('dash-filter-cat').value;
+  const st = el('dash-filter-stock').value;
+  const rot = el('dash-filter-rot').value;
+
+  FILTERED = DB.filter(i => {
+    const matchText = cumpleCriterioBusqueda(i, term);
+    const c = cat === 'all' || i.categoria === cat;
+    const r = rot === 'all' || i.rotacion === rot;
+    let s = true;
+    if(st === 'low') s = i.stock <= 0;
+    if(st === 'positive') s = i.stock > 0;
+    return matchText && c && r && s;
+  });
+  
+  PAGE = 1; renderTable();
+}
+
+function renderTable() {
+  const tbody = el('dash-table-body'); tbody.innerHTML = '';
+  const start = (PAGE-1)*LIMIT;
+  const pageData = FILTERED.slice(start, start+LIMIT);
+  
+  if(pageData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="padding:20px;">Sin resultados</td></tr>';
+  } else {
+    pageData.forEach(i => {
+      const tr = document.createElement('tr');
+      const cls = i.stock <= (i.min||0) ? 'stock-low' : 'stock-ok';
+      const txt = i.stock <= (i.min||0) ? 'Bajo' : 'OK';
+      const rotC = 'rot-' + (i.rotacion||'C').toLowerCase();
+      const minVal = i.min ? i.min.toFixed(2) : '-';
+      
+      tr.innerHTML = `<td><span class="rot-badge ${rotC}">${i.rotacion||'C'}</span></td><td><strong>${i.codigo}</strong></td><td>${i.desc}</td><td>${i.unidad||'-'}</td><td style="text-align:right;color:#777">${minVal}</td><td style="text-align:right;font-weight:bold">${i.stock.toFixed(2)}</td><td><span class="stock-tag ${cls}">${txt}</span></td>`;
+      tr.onclick = () => openModalMaterial(i); // <-- Llama al modal de material
+      tbody.appendChild(tr);
+    });
+  }
+  el('page-info').innerText = `Mostrando ${start+1}-${Math.min(start+LIMIT, FILTERED.length)} de ${FILTERED.length}`;
+  el('btn-prev').disabled = PAGE === 1;
+  el('btn-next').disabled = start + LIMIT >= FILTERED.length;
+}
+function changePage(d) { PAGE += d; renderTable(); document.querySelector('.table-wrapper').scrollTop=0; }
+
+/* ==========================================
+   7. AUTOCOMPLETE & SELECCION
+   ========================================== */
+function setupAutocomplete(inpId, listId, src, onSel, keyShow) {
+  const inp = el(inpId), list = el(listId);
+  let t;
+  inp.oninput = () => {
+    clearTimeout(t);
+    const val = inp.value;
+    if(val.length<2) { list.style.display='none'; return; }
+    t = setTimeout(() => {
+      list.innerHTML='';
+      let res;
+      if (keyShow === 'firmante') {
+         res = src.filter(i => (i[keyShow]||'').toLowerCase().includes(val.toLowerCase()) || (i.contratista||'').toLowerCase().includes(val.toLowerCase())).slice(0,20);
+      } else {
+         res = src.filter(i => cumpleCriterioBusqueda(i, val)).slice(0,20);
+      }
+      if(!res.length) { list.style.display='none'; return; }
+      res.forEach(r => {
+        const d = document.createElement('div');
+        d.className = 'autocomplete-item';
+        if(keyShow === 'firmante') d.innerHTML = `<strong>${r.firmante}</strong><small>${r.contratista}</small>`;
+        else d.innerHTML = `<strong>${r.desc}</strong><small>${r.codigo} | Stock: ${r.stock}</small>`;
+        d.onclick = () => { inp.value=''; list.style.display='none'; onSel(r); };
+        list.appendChild(d);
+      });
+      list.style.display='block';
+    }, 200);
+  };
+  document.addEventListener('click', e => { if(e.target!==inp) list.style.display='none'; });
+}
+
+function selectResp(r) { el('out-resp').value = r.firmante; el('out-contr').value = r.contratista; el('out-search').focus(); }
+function selectOutMat(m) { el('out-search').value = m.desc; el('out-code').value = m.codigo; el('out-stock-info').innerText = 'Stock: '+m.stock; el('out-qty').focus(); }
+function selectInMat(m) { el('in-search').value = m.desc; el('in-code').value = m.codigo; el('in-unit-display').innerText = `(${m.unidad})`; el('in-qty').focus(); }
+let curAdjItem = null;
+function selectAdjMat(m) { curAdjItem = m; el('adj-search').value = m.desc; el('adj-curr').innerText = m.stock; el('adj-val').focus(); }
+function selectCompMat(m) { el('comp-search').value = m.desc; el('comp-code').value = m.codigo; el('comp-qty').focus(); }
+
+/* ==========================================
+   8. GESTIÓN DE COLAS (ADD QUEUE)
+   ========================================== */
+function addQueue(type) {
+  let code = el(type+'-code').value;
+  const desc = el(type+'-search').value.trim();
+  const qty = parseFloat(el(type+'-qty').value);
+  
+  if (type === 'comp') {
+    if (!desc || !qty || qty <= 0) return alert('Ingrese descripción y cantidad válida.');
+    if (!code) code = "NUEVO";
+  } else {
+    if (!code || !qty) return alert('Seleccione un material existente y cantidad.');
+  }
+
+  const itemDB = DB.find(i => i.codigo === code);
+  const unidad = itemDB ? (itemDB.unidad || '-') : (type==='comp'?'?':'-');
+  const row = { codigo: code, desc: desc, cantidad: qty, unidad: unidad };
+  
+  if(type==='in') { row.proveedor = el('in-prov').value; row.remito = el('in-rem').value; row.importe = el('in-imp').value; }
+  if(type==='out') { row.responsable = el('out-resp').value; row.contratista = el('out-contr').value; }
+  
+  QUEUE[type].push(row); 
+  renderQueue(type);
+  
+  el(type+'-code').value=''; el(type+'-search').value=''; el(type+'-qty').value='';
+  if(type==='out') el('out-stock-info').innerText='';
+  if(type==='in') el('in-unit-display').innerText='';
+  el(type+'-search').focus();
+}
+
+function renderQueue(type) {
+  const tbId = type === 'comp' ? 'comp-table' : (type+'-table');
+  const emptyId = type === 'comp' ? 'comp-empty' : (type+'-empty');
+  const tb = el(tbId); 
+  tb.innerHTML='';
+  el(emptyId).classList.toggle('hidden', QUEUE[type].length > 0);
+  
+  QUEUE[type].forEach((i, idx) => {
+    const tr = document.createElement('tr');
+    if (type === 'in') {
+       tr.innerHTML = `<td><small>${i.codigo}</small><br><strong>${i.desc}</strong></td><td>${i.unidad}</td><td style="color:var(--success);font-weight:bold">${i.cantidad}</td><td>${i.proveedor||'-'}<br><small>${i.remito||''}</small></td><td><button class="pagination-btn" onclick="delQ('${type}',${idx})">✕</button></td>`;
+    } else if (type === 'out') {
+       tr.innerHTML = `<td><small>${i.codigo}</small><br><strong>${i.desc}</strong></td><td style="color:var(--danger);font-weight:bold">${i.cantidad}</td><td>${i.responsable||'-'}</td><td><button class="pagination-btn" onclick="delQ('${type}',${idx})">✕</button></td>`;
+    } else if (type === 'comp') {
+       tr.innerHTML = `<td><small>${i.codigo}</small><br><strong>${i.desc}</strong> (${i.unidad})</td><td style="font-weight:bold;">${i.cantidad}</td><td><button class="pagination-btn" onclick="delQ('${type}',${idx})">✕</button></td>`;
+    }
+    tb.appendChild(tr);
+  });
+}
+function delQ(t,x){ QUEUE[t].splice(x,1); renderQueue(t); }
+
+/* ==========================================
+   9. GUARDADO DE DATOS
+   ========================================== */
+async function saveTx(type) {
+  if(!QUEUE[type].length) return alert('Lista vacía');
+  let head = {};
+  if(type==='out') {
+    head = { responsable: el('out-resp').value, contratista: el('out-contr').value, comentario: el('out-comm').value, destino: el('out-contr').value };
+    if(!head.responsable) return alert('Falta responsable');
+  }
+  showLoader(true, "Guardando...");
+  const mult = type==='in'?1:-1;
+  const snap = [];
+  QUEUE[type].forEach(q => {
+    const dbItem = DB.find(x => x.codigo === q.codigo);
+    if(dbItem) { snap.push({c:q.codigo, s:dbItem.stock, m:dbItem.movs}); dbItem.stock += (q.cantidad * mult); dbItem.movs += 1; }
+  });
+  if(type==='in') { DB = calculateABC(DB); applyFilter(); checkAlerts(); }
+
+  try {
+    const items = JSON.parse(JSON.stringify(QUEUE[type]));
+    if(type==='in') await run('procesarRecepcionMateriales', items);
+    else await run('procesarEgresoMateriales', items, head);
+    
+    QUEUE[type]=[]; renderQueue(type);
+    if(type==='out') { 
+       DB = calculateABC(DB); applyFilter(); checkAlerts(); 
+       el('out-resp').value=''; el('out-contr').value=''; el('out-comm').value=''; 
+    }
+    alert('Guardado');
+  } catch(e) {
+    snap.forEach(s=>{ const i=DB.find(x=>x.codigo===s.c); if(i) { i.stock=s.s; i.movs=s.m; } });
+    applyFilter();
+    if (e.message.includes("STOCK INSUFICIENTE")) {
+      if (confirm(e.message + "\n\n¿Ajustar stock ahora?")) { RETURN_TO_SALIDAS=true; nav('gestion'); 
+         const m=e.message.match(/MAT-\d+/); if(m){const it=DB.find(x=>x.codigo===m[0]); if(it) selectAdjMat(it);} 
+      }
+    } else showError(e);
+  } finally { showLoader(false); }
+}
+
+async function savePurchaseRequest(){
+  if(!QUEUE['comp'].length) return alert("No hay materiales.");
+  const head = {
+    prioridad: el('comp-prio').value,
+    destino: el('comp-dest').value,
+    fechaNecesidad: el('comp-fecha').value,
+    solicitante: el('comp-solic').value,
+    observaciones: el('comp-obs').value,
+    gestor: el('comp-gestor').value
+  };
+  if(!head.solicitante) return alert("Indique el Solicitante.");
+  showLoader(true, "Creando solicitud...");
+  try {
+    const msg = await run('guardarSolicitudCompra', head, QUEUE['comp']);
+    alert(msg);
+    QUEUE['comp'] = []; renderQueue('comp');
+    el('comp-solic').value=''; el('comp-obs').value=''; el('comp-dest').value='';
+    navComp('menu');
+  } catch(e) { showError(e); }
+  showLoader(false);
+}
+
+async function saveNew() {
+  const mat = { desc: el('new-desc').value, unidad: el('new-unit').value, categoria: el('new-cat').value, stock: el('new-stock').value };
+  if(!mat.desc || !mat.unidad) return alert('Falta datos');
+  showLoader(true, "Creando...");
+  try { 
+    await run('agregarNuevosMateriales', [mat], el('new-motivo').value); 
+    alert('Creado'); 
+    el('new-desc').value=''; el('new-unit').value=''; el('new-cat').value=''; el('new-stock').value='0';
+    await refreshData();
+  } catch(e) { showError(e); } finally { showLoader(false); }
+}
+
+async function saveAdj() {
+  if(!curAdjItem) return; const val = el('adj-val').value; if(!val) return;
+  showLoader(true, "Ajustando...");
+  curAdjItem.stock = parseFloat(val); applyFilter(); checkAlerts();
+  try { 
+    await run('registrarMultiplesAjustes', [{codigo:curAdjItem.codigo, nuevoStock:val}], el('adj-reas').value); 
+    alert('Ajustado'); 
+    el('adj-search').value=''; el('adj-val').value=''; el('adj-curr').innerText='--'; curAdjItem=null;
+    await refreshData(); 
+    if(RETURN_TO_SALIDAS){RETURN_TO_SALIDAS=false;nav('salidas');} 
+  } 
+  catch(e) { showError(e); } finally { showLoader(false); }
+}
+
+async function resetNegs() { if(!confirm('¿Seguro?')) return; showLoader(true); try { await run('ponerNegativosEnCero', 'Web Reset'); alert('Hecho'); await refreshData(); } catch(e) { showError(e); } showLoader(false); }
+async function runLegacyImport() { if(!confirm('¿Importar?')) return; showLoader(true); try { const msg = await run('ejecutarImportacionEgresosWeb'); alert(msg); await refreshData(); } catch(e) { showError(e); } showLoader(false); }
+async function recalcMinimos() { if(!confirm('¿Recalcular?')) return; showLoader(true); try { const msg = await run('calcularStockMinimosAuto'); alert(msg); await refreshData(); } catch(e) { alert(e.message); } showLoader(false); }
+
+/* ==========================================
+   10. MODAL (Unificado)
+   ========================================== */
+// --- ABRE MODAL PARA VER MATERIAL (Dashboard) ---
+function openModalMaterial(item) {
+  el('modal-detail').classList.remove('hidden');
+  
+  // Limpiar/Mostrar secciones
+  el('modal-highlight').innerHTML = '';
+  el('modal-meta').innerHTML = `
+    <p><strong>Categoría:</strong> <span id="modal-cat"></span></p>
+    <p><strong>Unidad:</strong> <span id="modal-unit"></span></p>
+  `;
+  el('modal-stock').style.display = 'block';
+  el('modal-quotes-section').classList.add('hidden');
+  
+  // Llenar datos
+  el('modal-title').innerText = `${item.desc} (${item.codigo})`;
+  el('modal-subtitle').innerText = "Historial de Movimientos";
+  
+  const stk = el('modal-stock'); 
+  stk.innerText = item.stock.toFixed(2);
+  stk.style.color = item.stock < 0 ? 'var(--danger)' : 'var(--primary)';
+  
+  el('modal-highlight').innerHTML = `<div><span class"rot-badge rot-${(item.rotacion||'C').toLowerCase()}">${item.rotacion||'C'}</span> <span style="color:#666; font-size:0.8rem;">Rotación</span></div>`;
+  el('modal-cat').innerText = item.categoria||'-';
+  el('modal-unit').innerText = item.unidad||'-';
+
+  // Llenar tabla
+  el('modal-thead').innerHTML = '<tr><th>Fecha</th><th>Movimiento</th><th>Cant.</th><th>Detalle</th></tr>';
+  const tbody = el('modal-tbody');
+  tbody.innerHTML = '';
+  el('modal-loader').classList.remove('hidden');
+  
+  run('obtenerHistorialMaterial', item.codigo).then(h => {
+    el('modal-loader').classList.add('hidden');
+    if (h.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="text-center">Sin movimientos.</td></tr>'; return; }
+    
+    tbody.innerHTML = h.map(r => {
+      const color = r[1] === 'EGRESO' ? 'var(--danger)' : 'var(--success)';
+      return `<tr><td>${r[0]}</td><td><strong style="color:${color}">${r[1]}</strong></td><td>${r[2]}</td><td style="font-size:0.85rem; color:#555;">${r[3]||''}</td></tr>`;
+    }).join('');
+  }).catch(showError);
+}
+
+// --- ABRE MODAL PARA VER PEDIDO (Compras) ---
+function verDetallePedido(id) {
+  showLoader(true, "Cargando detalle...");
+  
+  run('obtenerDetalleSolicitud', id).then(data => {
+    el('modal-detail').classList.remove('hidden');
+    
+    let colorEst = '#666';
+    if(data.estado === 'PENDIENTE') colorEst = '#f9ab00';
+    if(data.estado === 'COTIZANDO') colorEst = '#1a73e8';
+    if(data.estado === 'CERRADO') colorEst = '#1e8e3e';
+
+    el('modal-title').innerText = `Solicitud: ${data.id}`;
+    
+    el('modal-stock').style.display = 'none'; 
+    el('modal-highlight').innerHTML = `<span style="background:${colorEst}; color:white; padding:5px 15px; border-radius:20px; font-weight:bold; font-size:0.9rem;">${data.estado}</span>`;
+
+    el('modal-meta').innerHTML = `
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; background:#f9f9f9; padding:10px; border-radius:4px; font-size:0.9rem;">
+        <div><strong>Creado:</strong> ${data.fecha}</div>
+        <div><strong>Obra:</strong> ${data.fechaObra}</div>
+        <div><strong>Prioridad:</strong> ${data.prioridad}</div>
+        <div><strong>Gestor:</strong> ${data.gestor||'-'}</div>
+        <div style="grid-column:span 2; border-top:1px solid #ddd; margin-top:5px; padding-top:5px;">
+           <strong>Solicitante:</strong> ${data.solicitante}
+        </div>
+      </div>
+    `;
+    
+    el('modal-subtitle').innerText = "Materiales Solicitados";
+    el('modal-thead').innerHTML = '<tr><th>Cód</th><th>Material</th><th>Cant</th><th>Stock</th></tr>';
+    const tbody = el('modal-tbody');
+    tbody.innerHTML = '';
+    
+    data.items.forEach(item => {
+      const sAct = parseFloat(item.stockActual)||0;
+      const sPed = parseFloat(item.cantidad)||0;
+      const stockStyle = sAct < sPed ? 'color:var(--danger); font-weight:bold;' : 'color:var(--success);';
+      tbody.innerHTML += `<tr><td><small>${item.codigo}</small></td><td>${item.desc}</td><td><strong>${item.cantidad}</strong> ${item.unidad}</td><td style="${stockStyle}">${sAct.toFixed(2)}</td></tr>`;
+    });
+
+    const sectionQuotes = el('modal-quotes-section');
+    const qThead = el('quotes-thead');
+    const qTbody = el('quotes-tbody');
+    const proveedores = Object.keys(data.cotizaciones || {});
+    
+    if (proveedores.length > 0) {
+        sectionQuotes.classList.remove('hidden');
+        let headerHTML = '<tr><th style="width:30%">Material</th>';
+        proveedores.forEach(prov => headerHTML += `<th style="text-align:center;">${prov}</th>`);
+        headerHTML += '</tr>';
+        qThead.innerHTML = headerHTML;
+
+        let bodyHTML = '';
+        data.items.forEach(item => {
+            bodyHTML += `<tr><td><small>${item.codigo}</small><br>${item.desc}</td>`;
+            proveedores.forEach(prov => {
+                const preciosProv = data.cotizaciones[prov] || {};
+                const precioUnit = preciosProv[item.codigo];
+                if (precioUnit) {
+                    const total = precioUnit * item.cantidad;
+                    bodyHTML += `<td class="text-center" style="background:#fafffa;">$${precioUnit}</td>`;
+                } else {
+                    bodyHTML += `<td class="text-center" style="color:#ccc;">-</td>`;
+                }
+            });
+            bodyHTML += '</tr>';
+        });
+        qTbody.innerHTML = bodyHTML;
+    } else {
+        sectionQuotes.classList.add('hidden');
+    }
+    showLoader(false);
+  }).catch(showError);
+}
+
+// --- CIERRE MODAL (Unificado) ---
+function closeModal() { 
+  el('modal-detail').classList.add('hidden'); 
+  // Reseteo genérico para la próxima vez
+  el('modal-stock').style.display = 'block'; 
+  el('modal-meta').innerHTML = `<p><strong>Categoría:</strong> <span id="modal-cat"></span></p><p><strong>Unidad:</strong> <span id="modal-unit"></span></p>`;
+  el('modal-quotes-section').classList.add('hidden');
+}
+
+
+/* ==========================================
+   11. LÓGICA DE COMPARATIVA
+   ========================================== */
+
+async function abrirModalCotizacion(idPedido) {
+  el('modal-comparativa').classList.remove('hidden');
+  el('comp-content').classList.add('hidden');
+  el('comp-loader').classList.remove('hidden');
+  
+  // Limpiar estado anterior
+  G_PROVS_COTIZANDO = [];
+  el('comp-table-body-carga').innerHTML = '';
+  el('comp-ranking-body').innerHTML = '';
+  el('comp-optima-body').innerHTML = '';
+
+  try {
+    const data = await run('obtenerDatosParaCotizar', idPedido);
+    G_PEDIDO_ACTUAL = data.pedido;
+    G_PROVEEDORES = data.proveedores;
+    G_CONDICIONES = data.condiciones;
+    
+    // Llenar el <select> de proveedores
+    const sel = el('comp-select-proveedor');
+    sel.innerHTML = '<option value="">Seleccione un Proveedor...</option>';
+    G_PROVEEDORES.forEach(p => { const o=document.createElement('option'); o.value=p; o.text=p; sel.appendChild(o); });
+
+    // Dibujar las FILAS de items
+    const tbody = el('comp-table-body-carga');
+    tbody.innerHTML = '';
+    data.pedido.items.forEach(it => {
+      const tr = document.createElement('tr');
+      tr.id = 'comp-item-' + cleanId(it.codigo); // Usar ID limpio
+      tr.innerHTML = `<td><small>${it.codigo}</small><br><strong>${it.desc}</strong><br><small>Cant: ${it.cantidad}</small></td>`;
+      tbody.appendChild(tr);
+    });
+
+    // Dibujar Encabezado
+    el('comp-table-carga thead tr').innerHTML = '<th>Item</th>'; // Limpiar
+
+    el('comp-loader').classList.add('hidden');
+    el('comp-content').classList.remove('hidden');
+    
+  } catch(e) { showError(e); }
+}
+
+function agregarColumnaProveedor() {
+  const proveedor = el('comp-select-proveedor').value;
+  if (!proveedor) return alert("Seleccione un proveedor");
+  if (G_PROVS_COTIZANDO.includes(proveedor)) return alert("Ese proveedor ya está en la tabla.");
+
+  G_PROVS_COTIZANDO.push(proveedor);
+  
+  // 1. Agregar al Header
+  const th = document.createElement('th');
+  th.style.textAlign = 'center';
+  th.innerHTML = `
+    <div>${proveedor}</div>
+    <div style="font-size:0.8rem; font-weight:400; display:flex; gap:5px; margin-top:5px;">
+      <select class="comp-extra" data-prov="${proveedor}" data-field="moneda" style="width:60px;font-size:0.8rem;height:auto;padding:2px;">
+        <option>ARS</option><option>USD</option>
+      </select>
+      <input type="number" class="comp-extra" data-prov="${proveedor}" data-field="plazo" value="0" style="width:60px;font-size:0.8rem;height:auto;padding:2px;" title="Plazo días">
+    </div>
+    <div style="margin-top:5px;">
+      <select class="comp-extra" data-prov="${proveedor}" data-field="condPago" style="width:120px;font-size:0.8rem;height:auto;padding:2px;">
+        ${G_CONDICIONES.map(c => `<option value="${c}">${c}</option>`).join('')}
+      </select>
+    </div>
+    <div style="margin-top:5px;">
+      <input type="number" class="comp-extra" data-prov="${proveedor}" data-field="flete" value="0" style="width:120px;font-size:0.8rem;height:auto;padding:2px;" placeholder="Flete ($)">
+    </div>
+  `;
+  el('comp-table-carga thead tr').appendChild(th);
+  
+  // 2. Agregar celdas (inputs) para cada item
+  G_PEDIDO_ACTUAL.items.forEach(it => {
+    const td = document.createElement('td');
+    td.style.textAlign = 'center';
+    td.innerHTML = `<input type="number" class="comp-price" data-prov="${proveedor}" data-codigo="${it.codigo}" placeholder="0.00" style="width:100px;">`;
+    el('comp-item-' + cleanId(it.codigo)).appendChild(td); // Usar ID limpio
+  });
+}
+
+async function ejecutarCalculoComparativa() {
+  showLoader(true, "Calculando...");
+  
+  // 1. Recolectar datos
+  let cotizaciones = [];
+  
+  G_PROVS_COTIZANDO.forEach(p => {
+    let coti = {
+      proveedor: p, items: {},
+      moneda: document.querySelector(`.comp-extra[data-prov="${p}"][data-field="moneda"]`).value,
+      condPago: document.querySelector(`.comp-extra[data-prov="${p}"][data-field="condPago"]`).value,
+      plazo: document.querySelector(`.comp-extra[data-prov="${p}"][data-field="plazo"]`).value,
+      flete: document.querySelector(`.comp-extra[data-prov="${p}"][data-field="flete"]`).value
+    };
+    document.querySelectorAll(`.comp-price[data-prov="${p}"]`).forEach(inp => {
+      if (inp.value > 0) coti.items[inp.dataset.codigo] = inp.value;
+    });
+    cotizaciones.push(coti);
+  });
+  
+  try {
+    const resultado = await run('ejecutarLogicaComparativa', G_PEDIDO_ACTUAL.id, cotizaciones);
+    
+    // 2. Mostrar Ranking
+    el('comp-ranking-body').innerHTML = resultado.ranking.map((r, idx) => `
+      <tr style="background:${idx===0?'#e6f4ea':''}">
+        <td><strong>#${idx+1}</strong></td><td><strong>${r.proveedor}</strong></td>
+        <td>${r.score}</td><td>$${r.totalAnalitico.toLocaleString()}</td>
+        <td>${r.condPago}</td><td>${r.plazo} días</td>
+      </tr>`).join('');
+      
+    // 3. Mostrar Óptima
+    let totalOptimo = 0;
+    el('comp-optima-body').innerHTML = resultado.optima.map(o => {
+      totalOptimo += o.total;
+      return `<tr>
+        <td><small>${o.codigo}</small><br>${o.desc} ${o.nota=='CANJE'?'<span style="color:red;font-weight:bold;">(C)</span>':''}</td>
+        <td>${o.proveedor}</td><td>$${o.precio.toLocaleString()}</td>
+        <td>$${o.total.toLocaleString()}</td>
+      </tr>`;
+    }).join('') + `<tr style="background:#fafafa;font-weight:bold;"><td colspan="3" style="text-align:right;">TOTAL:</td><td>$${totalOptimo.toLocaleString()}</td></tr>`;
+    
+  } catch(e) { showError(e); }
+  
+  showLoader(false);
+}
+
+function closeCompModal() { 
+  el('modal-comparativa').classList.add('hidden'); 
+}
+</script>
+
+
+</body>
+</html>
