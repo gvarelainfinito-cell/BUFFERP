@@ -647,6 +647,7 @@ function guardarSolicitudCompra(cabecera, items) {
 function obtenerHistorialCompras() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var hoja = ss.getSheetByName('Ciclo_Compras');
+  // Always return an array, even on failure.
   if (!hoja) return [];
   
   var lastRow = safeGetLastRow(hoja);
@@ -658,29 +659,36 @@ function obtenerHistorialCompras() {
   for (var i = 0; i < data.length; i++) {
     var r = data[i];
     
+    // Skip row if ID is missing to prevent errors.
     if (!r[0] || String(r[0]).trim() === "") continue;
 
     var items = [];
     try {
-      var rawJson = r[7]; // Col H
+      var rawJson = r[7]; // Col H for JSON items
       if (rawJson && typeof rawJson === 'string' && rawJson.trim() !== "") {
         var parsed = JSON.parse(rawJson);
+        // Ensure the parsed data is an array.
         if (parsed && Array.isArray(parsed)) items = parsed;
       }
-    } catch (e) { items = []; }
-    if (!items) items = []; 
+    } catch (e) {
+      // If JSON is corrupt, log the error and default to an empty array.
+      console.error("Error parsing JSON for ID " + r[0] + ": " + e.message);
+      items = [];
+    }
 
     var fCreacion = r[1];
-    var fObra = r[2]; // Objeto Date o string
+    var fObra = r[2]; // This can be a Date object or a string.
+
+    // Harden date processing
+    var fechaCreacionStr = (fCreacion instanceof Date && !isNaN(fCreacion)) ? fCreacion.toLocaleDateString('es-AR') : 'N/A';
+    var fechaObraStr = (fObra instanceof Date && !isNaN(fObra)) ? fObra.toLocaleDateString('es-AR') : 'N/A';
+    var fechaObraRawISO = (fObra instanceof Date && !isNaN(fObra)) ? fObra.toISOString() : null;
 
     historial.push({
       id: String(r[0]),
-      fecha: (fCreacion instanceof Date) ? fCreacion.toLocaleDateString('es-AR') : String(fCreacion),
-      fechaObra: (fObra instanceof Date) ? fObra.toLocaleDateString('es-AR') : String(fObra),
-      
-      // --- CORRECCIÓN: Convertir a ISO String si es Fecha ---
-      fechaObraRaw: (fObra instanceof Date) ? fObra.toISOString() : (fObra || null), 
-      
+      fecha: fechaCreacionStr,
+      fechaObra: fechaObraStr,
+      fechaObraRaw: fechaObraRawISO,
       prioridad: String(r[3] || 'Normal'),
       solicitante: String(r[4] || '-'),
       estado: String(r[6] || 'PENDIENTE'),
