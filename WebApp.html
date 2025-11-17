@@ -126,6 +126,8 @@
     #loader { position: fixed; top:0; left:0; width:100%; height:100%; background: white; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px;}
     @keyframes spin { 100% { transform: rotate(360deg); } }
+    .atraso-severo { background-color: #fee; color: #a50000; font-weight: bold; }
+    
   </style>
 </head>
 <body>
@@ -1337,6 +1339,66 @@ async function ejecutarCalculoComparativa() {
   } catch(e) { showError(e); }
   
   showLoader(false);
+}
+
+  function loadPurchaseHistory() {
+  const tbody = el('comp-history-body');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding:20px;">Cargando historial...</td></tr>';
+  
+  run('obtenerHistorialCompras').then(historial => {
+    if (!historial || historial.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding:20px;">No se encontraron solicitudes.</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = ''; 
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    historial.forEach(h => {
+      const tr = document.createElement('tr');
+      
+      let diasAtraso = 0;
+      let atrasoDisplay = '-';
+      let claseAtraso = '';
+
+      if (h.fechaObraRaw && h.estado !== 'CERRADO') {
+        const fechaObra = new Date(h.fechaObraRaw);
+        fechaObra.setHours(0, 0, 0, 0);
+        
+        if (fechaObra < hoy) {
+          diasAtraso = Math.round((hoy - fechaObra) / (1000 * 60 * 60 * 24));
+          atrasoDisplay = `${diasAtraso} días`;
+          if (diasAtraso > 7) claseAtraso = 'atraso-severo';
+        }
+      }
+      
+      let colorEst = '#666';
+      if(h.estado === 'PENDIENTE') colorEst = '#f9ab00';
+      if(h.estado === 'COTIZANDO') colorEst = '#1a73e8';
+      if(h.estado === 'CERRADO') colorEst = '#1e8e3e';
+
+      tr.innerHTML = `
+        <td><strong>${h.id}</strong></td>
+        <td>${h.fecha}</td>
+        <td>${h.fechaObra}</td>
+        <td>${h.solicitante}</td>
+        <td>${h.prioridad}</td>
+        <td class="${claseAtraso}">${atrasoDisplay}</td>
+        <td><span style="background:${colorEst}; color:white; padding: 4px 10px; border-radius:12px; font-size:0.8rem;">${h.estado}</span></td>
+        <td>
+          <button class="pagination-btn" style="padding: 5px 8px;" onclick="verDetallePedido('${h.id}')" title="Ver Detalle"><span class="material-icons" style="font-size:16px;">visibility</span></button>
+          <button class="pagination-btn admin-only" style="padding: 5px 8px;" onclick="abrirModalCotizacion('${h.id}')" title="Comparar Precios"><span class="material-icons" style="font-size:16px;">calculate</span></button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+    
+    // Re-aplicar permisos por si hay botones solo para admin
+    applyPermissions(CURRENT_USER.rol);
+    
+  }).catch(showError);
 }
 
 function closeCompModal() { 
